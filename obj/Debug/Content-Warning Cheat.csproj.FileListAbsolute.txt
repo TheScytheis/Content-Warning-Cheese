@@ -1,0 +1,7 @@
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Debug\Content-Warning Cheat.csproj.AssemblyReference.cache
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Debug\Content-Warning Cheat.csproj.CoreCompileInputs.cache
+C:\Users\drgui\OneDrive\Documentos\GitHub\SteamBase\steamapps\common\Content Warning\BepInEx\plugins\TestUnityPlugin.dll
+C:\Users\drgui\OneDrive\Documentos\GitHub\SteamBase\steamapps\common\Content Warning\BepInEx\plugins\TestUnityPlugin.pdb
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Debug\Content-.2EC26C0F.Up2Date
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Debug\TestUnityPlugin.dll
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Debug\TestUnityPlugin.pdb

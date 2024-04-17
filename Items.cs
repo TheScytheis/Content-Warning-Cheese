@@ -215,7 +215,7 @@ namespace TestUnityPlugin
                 if (SpawnMethod == SpawnType.CallDrone)
                     SpawnItem(new byte[] { itemkeypair.Key });
                 if (SpawnMethod == SpawnType.CreatePickup)
-                    SpawnItem(new byte[] { itemkeypair.Key }, UsefulFuncs.GetCrosshairPosition(true, 1.5f));
+                    SpawnItem(new byte[] { itemkeypair.Key });
             }
         }
         public static void SpawnAllItems()
@@ -231,7 +231,7 @@ namespace TestUnityPlugin
             if (SpawnMethod == SpawnType.CallDrone)
                 SpawnItem(array_id.ToArray());
             if (SpawnMethod == SpawnType.CreatePickup)
-                SpawnItem(array_id.ToArray(), UsefulFuncs.GetCrosshairPosition(true, 1.5f));
+                SpawnItem(array_id.ToArray());
         }
         public static void SpawnItem(byte itemid)
         {

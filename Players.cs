@@ -228,7 +228,7 @@ namespace TestUnityPlugin
             {
                 if (!keyValuePair.Value)
                     continue;
-                Items.SpawnItem(new byte[] { bomb_id }, keyValuePair.Key.refs.cameraPos.position);
+                Items.SpawnItem(new byte[] { bomb_id });
             }
         }
         public static void Cum(bool local = false)

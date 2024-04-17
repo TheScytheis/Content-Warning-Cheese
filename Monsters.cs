@@ -101,7 +101,7 @@ namespace TestUnityPlugin
 
             foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
             {
-                Items.SpawnItem(new byte[] { bomb_id }, monster.transform.parent.position);
+                Items.SpawnItem(new byte[] { bomb_id });
             }
         }
         public static void Falldown()

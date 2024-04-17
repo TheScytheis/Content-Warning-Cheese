@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,6 +15,8 @@ using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 using Zorro.Core;
+using Zorro.Core.CLI;
+using Zorro.PhotonUtility;
 using Zorro.UI;
 
 namespace TestUnityPlugin
@@ -25,10 +29,95 @@ namespace TestUnityPlugin
     [BepInPlugin("xiaodo.plugin.test.HelloWorld", "Hello, World!", "1.0")]
     public class HelloWorld : BaseUnityPlugin
     {
+        public static VideoHandle lastVideoID;
+        public static ClipID lastClipID;
+        public static void ApplyPatches()
+        {
+            Debug.Log("Trying to apply patches.");
+            var harmony = new Harmony("com.holden.codewarning");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            Debug.Log("Harmony patches applied.");
+        }
+
+        [HarmonyPatch(typeof(RecordingsHandler), "StartRecording")]
+        public static class StartRecordingPatch
+        {
+            private static MethodInfo FindFreePlayerMethod;
+            private static MethodInfo StopRecordingMethod;
+            private static FieldInfo PlayersRecordingField;
+
+            static StartRecordingPatch()
+            {
+                // Using reflection to access private/internal methods and fields
+                Type recordingHandlerType = typeof(RecordingsHandler);
+
+                FindFreePlayerMethod = recordingHandlerType.GetMethod("FindFreePlayer", BindingFlags.NonPublic | BindingFlags.Static);
+                StopRecordingMethod = recordingHandlerType.GetMethod("StopRecording", BindingFlags.NonPublic | BindingFlags.Static);
+                PlayersRecordingField = recordingHandlerType.GetField("m_playersRecording", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+
+            [HarmonyPrefix]
+            public static bool Prefix(ItemInstanceData data, PhotonView playerView)
+            {
+                if (!data.TryGetEntry<VideoInfoEntry>(out var t))
+                {
+                    Debug.LogError("No VideoInfoEntry found in instance data");
+                    return false;
+                }
+
+                if (t.videoID.Equals(VideoHandle.Invalid))
+                {
+                    t.videoID = new VideoHandle(Guid.NewGuid());
+                    Debug.Log($"Camera has no video ID, creating new video ID, {t.videoID}");
+                }
+
+                t.isRecording = true;
+                t.SetDirty();
+
+                int num = (playerView == null) ? (int)FindFreePlayerMethod.Invoke(null, null) : playerView.OwnerActorNr;
+                if (num == -1)
+                {
+                    Debug.LogError("No free player found to record camera...");
+                    return false;
+                }
+
+                var playersRecording = (BidirectionalDictionary<int, VideoHandle>)PlayersRecordingField.GetValue(RecordingsHandler.Instance);
+                if (playersRecording.ContainsKey(num))
+                {
+                    VideoHandle fromKey = playersRecording.GetFromKey(num);
+                    var camerasCurrentRecording = RecordingsHandler.GetCamerasCurrentRecording();
+                    if (camerasCurrentRecording.Contains(fromKey))
+                    {
+                        ItemInstanceData o;
+                        if (ItemInstanceDataHandler.TryGetInstanceData(camerasCurrentRecording.Get(fromKey), out o))
+                        {
+                            StopRecordingMethod.Invoke(null, new object[] { o });
+                            RecordingsHandler.StartRecording(o, null);
+                        }
+                    }
+                }
+
+                // Create the command package with a new ClipID
+                var newClipID = new ClipID(Guid.NewGuid());
+                lastClipID = newClipID;
+                lastVideoID = t.videoID;
+
+                CustomCommands<CustomCommandType>.SendPackage(new StartRecordingCommandPackage
+                {
+                    CameraDataGuid = data.m_guid,
+                    VideoID = t.videoID,
+                    ClipID = newClipID,
+                    CameraOwner = num
+                }, ReceiverGroup.All);
+
+                return false; // Prevent the original method from executing
+            }
+        }
         void Start()
         {
             //Bypass Plugin Check
             Traverse.Create(GameHandler.Instance).Field("m_pluginHash").SetValue(null);
+            ApplyPatches();
         }
         void OnGUI()
         {
@@ -131,6 +220,72 @@ namespace TestUnityPlugin
                     if (GUILayout.Button("Exit Realm"))
                         Players.RemoveRealm(true);
                     GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Add Troll Clip to Camera"))
+                    {
+                        Debug.Log($"Starting troll script with VideoHandle: {lastVideoID.ToString()} and ClipID: {lastClipID.ToString()}");
+                        VideoCamera videoCamera = FindObjectOfType<VideoCamera>();
+                        if (videoCamera != null)
+                        {
+                            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                            string vhPath = Path.Combine(localAppDataPath, "Temp\\rec", lastVideoID.ToString());
+
+                            // Create or clear the directory
+                            CreateOrClearDirectory(vhPath);
+                            string clipPath = Path.Combine(vhPath, lastClipID.ToString());
+                            CreateOrClearDirectory(clipPath);
+
+                            //Time to copy the file
+                            string trollPath = Path.Combine(localAppDataPath, "Temp\\rec\\CWVideos\\porno");
+                            string sourceFileName = "output.webm"; // file name
+                            string sourceFilePath = Path.Combine(trollPath, sourceFileName);
+                            string destinationFilePath = Path.Combine(clipPath, sourceFileName);
+                            try
+                            {
+                                // Check if the source file exists
+                                if (File.Exists(sourceFilePath))
+                                {
+                                    Debug.Log("Trying to copy file.");
+                                    // Copy the file and allow overwriting of the destination file if it exists
+                                    File.Copy(sourceFilePath, destinationFilePath, true);
+                                    Debug.Log("File copied successfully.");
+                                }
+                                else
+                                {
+                                    Debug.LogError($"Source file does not exist: {sourceFilePath}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log any errors during the copy process
+                                Debug.LogError($"Error copying file: {ex.Message}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("No VideoCamera found in scene.");
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    {
+                        if (GUILayout.Button("Open Console"))
+                        {
+                            foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                            {
+                                item.Show();
+                            }
+                        }
+
+                        if (GUILayout.Button("Close Console"))
+                        {
+                            foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                            {
+                                item.Hide();
+                            }
+                        }
+                    }
+                    GUILayout.EndHorizontal();
                 }
                 if(Players.InGame.Count > 0)
                 {
@@ -224,7 +379,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -263,7 +418,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -302,7 +457,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -341,7 +496,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -380,7 +535,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -419,7 +574,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 1.5f));
+                                    Items.SpawnItem(new byte[] { item.Key });
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -543,6 +698,16 @@ namespace TestUnityPlugin
                 CenterLabel("Strong condemnation of those domestically monetizing GitHub open-source code");
                 GUILayout.EndArea();
             }
+        }
+        void CreateOrClearDirectory(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+                Debug.Log($"Directory cleared: {path}");
+            }
+            Directory.CreateDirectory(path);
+            Debug.Log($"Directory created: {path}");
         }
         void CenterLabel(string label)
         {
