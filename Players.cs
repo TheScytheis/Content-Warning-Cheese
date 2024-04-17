@@ -83,7 +83,6 @@ namespace TestUnityPlugin
 
             player.refs.controller.sprintMultiplier = 2.3f * SprintMultipiler;
 
-            CustomPlayerFace.ChangeFace();
         }
         public static void JoinRealm(bool local = false)
         {
