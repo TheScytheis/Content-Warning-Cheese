@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -10,6 +11,8 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using UnityEngine.SocialPlatforms;
+using static HelperFunctions;
 using static UnityEngine.GraphicsBuffer;
 
 namespace TestUnityPlugin
@@ -100,6 +103,7 @@ namespace TestUnityPlugin
                 }
             }
         }
+
         public static void RemoveRealm(bool local = false)
         {
             if (local)
@@ -247,6 +251,30 @@ namespace TestUnityPlugin
                 }
             }
         }
+
+        public static void TeleportTo(bool local = false)
+        {
+            if (local)
+            {
+                return;
+            }
+            else
+            {
+                foreach (var keyValuePair in InGame)
+                {
+                    if (!keyValuePair.Value)
+                        continue;
+                    Type playerType = keyValuePair.Key.GetType();
+                    MethodInfo teleportMethod = playerType.GetMethod("Teleport", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (teleportMethod != null)
+                    {
+                        Vector3 playerpos = keyValuePair.Key.refs.headPos.position;
+                        teleportMethod.Invoke(Player.localPlayer, new object[] { playerpos, Player.localPlayer.transform.forward });
+                    }
+                }
+            }
+        }
+
         public static void Falldown(bool local = false)
         {
             if (local)

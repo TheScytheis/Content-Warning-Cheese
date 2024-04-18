@@ -26,11 +26,19 @@ namespace TestUnityPlugin
         [DllImport("Shell32.dll")]
         public static extern int ShellExecuteA(IntPtr hwnd, StringBuilder lpszOp, StringBuilder lpszFile, StringBuilder lpszParams, StringBuilder lpszDir, int FsShowCmd);
     }
-    [BepInPlugin("xiaodo.plugin.test.HelloWorld", "Hello, World!", "1.0")]
+    [BepInPlugin("holden.plugin.test.HelloWorld", "Hello, World!", "1.0")]
     public class HelloWorld : BaseUnityPlugin
     {
         public static VideoHandle lastVideoID;
         public static ClipID lastClipID;
+        private Player selectedPlayer;
+        //Troll Video Dropdown
+        private bool isFolderDropdownVisible = false;
+        private Vector2 folderScrollPosition;
+        private string folderButtonText = "Select Video";
+        private int selectedFolderIndex = -1;
+        private string selectedVideo;
+
         public static void ApplyPatches()
         {
             Debug.Log("Trying to apply patches.");
@@ -127,8 +135,308 @@ namespace TestUnityPlugin
                 return;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.Confined;
-            windowRect = GUI.Window(114519810, windowRect, WindowFunc, "Xiaodou - Content Warning: Free mods, no resale allowed!");
+            windowRect = GUI.Window(114519810, windowRect, WindowFunc, "Holden's Content Warning MOD!");
         }
+
+        private GameObject lastDetectedObject = null;
+        public void SelectPlayer()
+        {
+            if (!Input.anyKey || !Input.anyKeyDown)
+            {
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                // Cast a ray from the center of the screen (camera)
+                Ray ray = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+                RaycastHit hit;
+
+                // Check if the ray hits any object within maxDistance
+                if (Physics.Raycast(ray, out hit, 1000))
+                {
+                    // Check if the hit object is different from the last detected object
+                    if (hit.collider.gameObject != lastDetectedObject)
+                    {
+                        // Update the last detected object
+                        lastDetectedObject = hit.collider.gameObject;
+                        if (lastDetectedObject.GetComponentInParent<Player>() != null)
+                        {
+                            selectedPlayer = lastDetectedObject.GetComponentInParent<Player>();
+
+                            //Ativar som
+                            MethodInfo methodInfo = typeof(Player).GetMethod("CallMakeSound", BindingFlags.NonPublic | BindingFlags.Instance);
+                            if (methodInfo != null)
+                            {
+                                methodInfo.Invoke(selectedPlayer, new object[] { 0 });
+                            }
+                            HelmetText.Instance.SetHelmetText("Player Selected: " + selectedPlayer.refs.view.Controller.ToString(), 2.5f);
+                        }
+                        else
+                        {
+                            selectedPlayer = null;
+                            //Ativar som
+                            MethodInfo methodInfo = typeof(Player).GetMethod("CallMakeSound", BindingFlags.NonPublic | BindingFlags.Instance);
+                            if (methodInfo != null)
+                            {
+                                methodInfo.Invoke(Player.localPlayer, new object[] { 2 });
+                            }
+                            HelmetText.Instance.SetHelmetText("Deselected", 2.5f);
+                        }
+
+                    }
+                }
+                else
+                {
+                    lastDetectedObject = null;
+                }
+                lastDetectedObject = null;
+            }
+        }
+        public void MurderBind()
+        {
+            if (!Input.anyKey || !Input.anyKeyDown)
+            {
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                if (selectedPlayer != null && selectedPlayer.GetComponent<Player>() != null)
+                {
+                    MethodInfo methodInfo = typeof(Player).GetMethod("CallDie", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (methodInfo != null)
+                    {
+                        methodInfo.Invoke(selectedPlayer, new object[] { });
+                    }
+                }
+            }
+        }
+
+        //pegar nome do player player.refs.view.controller.name
+
+        public void ShadowRealmBind()
+        {
+            if (!Input.anyKey || !Input.anyKeyDown)
+            {
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                Player playerComponent = selectedPlayer.GetComponent<Player>();
+                if (selectedPlayer != null && playerComponent != null)
+                {
+                    if (!playerComponent.data.playerIsInRealm)
+                    {
+                        ShadowRealmHandler.instance.TeleportPlayerToRandomRealm(playerComponent);
+                    }
+                    else
+                    {
+                        // Access the private field 'currentRealms'
+                        FieldInfo fieldInfo = typeof(ShadowRealmHandler).GetField("currentRealms", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (fieldInfo != null)
+                        {
+                            GameObject[] currentRealms = (GameObject[])fieldInfo.GetValue(ShadowRealmHandler.instance);
+
+                            // Find the realm the player is currently in
+                            foreach (GameObject realm in currentRealms)
+                            {
+                                if (realm != null && realm.GetComponentInChildren<RealmGateTrigger>().playerInRealm == playerComponent)
+                                {
+                                    // Access the private method 'PlayerLeaveRealm'
+                                    MethodInfo methodInfo = typeof(ShadowRealmHandler).GetMethod("PlayerLeaveRealm", BindingFlags.NonPublic | BindingFlags.Instance);
+                                    if (methodInfo != null)
+                                    {
+                                        methodInfo.Invoke(ShadowRealmHandler.instance, new object[] { playerComponent, realm });
+                                        break; // Exit after the correct realm is found and the method is invoked
+                                    }
+                                    else
+                                    {
+                                        Debug.LogError("Method 'PlayerLeaveRealm' not found.");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public float forceMagnitude = 10f;
+        public void ForceThrow()
+        {
+            float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+
+            // Check if the scroll wheel is scrolled up
+            if (scrollInput > 0f)
+            {
+                StartCoroutine(ForceThrowCR(forceMagnitude));
+            }
+            // Check if the scroll wheel is scrolled down
+            else if (scrollInput < 0f)
+            {
+                // Invert the force magnitude for scrolling down
+                float invertedForceMagnitude = -forceMagnitude;
+                StartCoroutine(ForceThrowCR(invertedForceMagnitude));
+            }
+        }
+
+        private IEnumerator ForceThrowCR(float forceMagnitude)
+        {
+            // Get the camera's forward direction
+            Vector3 cameraForward = Camera.main.transform.forward;
+
+            // Calculate the force vector in the camera's forward direction
+            Vector3 force = cameraForward * forceMagnitude;
+
+            // Call the RPC function to apply the force
+            MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (methodInfo != null)
+            {
+                methodInfo.Invoke(selectedPlayer, new object[] { 0f, force, 2.5f });
+            }
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        public void Revive()
+        {
+            if (!Input.anyKey || !Input.anyKeyDown)
+            {
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+                if (selectedPlayer != null && selectedPlayer.GetComponent<Player>() != null)
+                {
+                    selectedPlayer.CallRevive();
+                }
+            }
+        }
+        private bool isCoroutineRunning = false;
+        private bool isApplyingForce = false;
+        public void FakeTP()
+        {
+            if (Input.GetMouseButton(2))
+            {
+                if (selectedPlayer != null && selectedPlayer.GetComponent<Player>() != null)
+                {
+                    if (!isApplyingForce)
+                    {
+                        isApplyingForce = true;
+                        StartCoroutine(ApplyForceCoroutine());
+                    }
+                }
+            }
+            else
+            {
+                isApplyingForce = false;
+            }
+        }
+
+        private IEnumerator ApplyForceCoroutine()
+        {
+            FieldInfo bpListField = typeof(PlayerRagdoll).GetField("bodypartList", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (bpListField != null)
+            {
+                List<Bodypart> bpList = (List<Bodypart>)bpListField.GetValue(selectedPlayer.GetComponent<PlayerRagdoll>());
+                while (isApplyingForce)
+                {
+                    foreach (Bodypart bp in bpList)
+                    {
+                        FieldInfo rbField = typeof(Bodypart).GetField("rig", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (rbField != null)
+                        {
+                            Rigidbody rb = (Rigidbody)rbField.GetValue(bp);
+                            if (bp != null && bp.bodypartType == BodypartType.Torso)
+                            {
+                                Vector3 totalForce = -rb.velocity - rb.angularVelocity;
+
+                                MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
+                                if (methodInfo != null)
+                                {
+                                    methodInfo.Invoke(selectedPlayer, new object[] { 0f, totalForce, 0f });
+                                }
+                                else
+                                {
+                                    Debug.LogError("Method 'CallTakeDamageAndAddForceAndFall' not found.");
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+
+                    yield return new WaitForFixedUpdate();
+                }
+            }
+        }
+
+        public void TrollFilm()
+        {
+            if (!Input.anyKey || !Input.anyKeyDown)
+            {
+                return;
+            }
+            if (Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                Debug.Log($"Starting troll script with VideoHandle: {lastVideoID.ToString()} and ClipID: {lastClipID.ToString()}");
+                // Find all objects of type VideoCamera in the scene
+                VideoCamera[] allVideoCameras = UnityEngine.Object.FindObjectsOfType<VideoCamera>(true); // true to include inactive objects
+                VideoCamera videoCamera;
+                // Iterate through all found VideoCamera objects
+                foreach (VideoCamera aVideoCamera in allVideoCameras)
+                {
+                    // Check if the videoCamera is held by the current player
+                    if (aVideoCamera.isHeldByMe)
+                    {
+                        // Log or handle the camera being held
+                        Debug.Log("VideoCamera held by me found: " + aVideoCamera.name);
+                        videoCamera = aVideoCamera;
+                        if (videoCamera != null)
+                        {
+                            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                            string vhPath = Path.Combine(localAppDataPath, "Temp\\rec", lastVideoID.ToString());
+
+                            // Create or clear the directory
+                            string clipPath = Path.Combine(vhPath, lastClipID.ToString());
+                            CreateOrClearDirectory(clipPath);
+
+                            //Time to copy the file
+                            string trollPath = selectedVideo;
+                            string sourceFileName = "output.webm"; // file name
+                            string sourceFilePath = Path.Combine(trollPath, sourceFileName);
+                            string destinationFilePath = Path.Combine(clipPath, sourceFileName);
+                            try
+                            {
+                                // Check if the source file exists
+                                if (File.Exists(sourceFilePath))
+                                {
+                                    Debug.Log("Trying to copy file.");
+                                    // Copy the file and allow overwriting of the destination file if it exists
+                                    File.Copy(sourceFilePath, destinationFilePath, true);
+                                    Debug.Log("File copied successfully.");
+                                    HelmetText.Instance.SetHelmetText(folderButtonText + " has been injected", 2.5f);
+                                }
+                                else
+                                {
+                                    Debug.LogError($"Source file does not exist: {sourceFilePath}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log any errors during the copy process
+                                Debug.LogError($"Error copying file: {ex.Message}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("No VideoCamera found in scene.");
+                        }
+                    }
+                }
+            }
+        }
+
+
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Insert))
@@ -155,6 +463,13 @@ namespace TestUnityPlugin
                 }
             }
 
+            MurderBind();
+            ShadowRealmBind();
+            SelectPlayer();
+            ForceThrow();
+            Revive();
+            FakeTP();
+            TrollFilm();
             Players.Run();
             Items.Run();
             Monsters.Run();
@@ -220,74 +535,8 @@ namespace TestUnityPlugin
                     if (GUILayout.Button("Exit Realm"))
                         Players.RemoveRealm(true);
                     GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Add Troll Clip to Camera"))
-                    {
-                        Debug.Log($"Starting troll script with VideoHandle: {lastVideoID.ToString()} and ClipID: {lastClipID.ToString()}");
-                        VideoCamera videoCamera = FindObjectOfType<VideoCamera>();
-                        if (videoCamera != null)
-                        {
-                            string localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                            string vhPath = Path.Combine(localAppDataPath, "Temp\\rec", lastVideoID.ToString());
-
-                            // Create or clear the directory
-                            CreateOrClearDirectory(vhPath);
-                            string clipPath = Path.Combine(vhPath, lastClipID.ToString());
-                            CreateOrClearDirectory(clipPath);
-
-                            //Time to copy the file
-                            string trollPath = Path.Combine(localAppDataPath, "Temp\\rec\\CWVideos\\porno");
-                            string sourceFileName = "output.webm"; // file name
-                            string sourceFilePath = Path.Combine(trollPath, sourceFileName);
-                            string destinationFilePath = Path.Combine(clipPath, sourceFileName);
-                            try
-                            {
-                                // Check if the source file exists
-                                if (File.Exists(sourceFilePath))
-                                {
-                                    Debug.Log("Trying to copy file.");
-                                    // Copy the file and allow overwriting of the destination file if it exists
-                                    File.Copy(sourceFilePath, destinationFilePath, true);
-                                    Debug.Log("File copied successfully.");
-                                }
-                                else
-                                {
-                                    Debug.LogError($"Source file does not exist: {sourceFilePath}");
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                // Log any errors during the copy process
-                                Debug.LogError($"Error copying file: {ex.Message}");
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogError("No VideoCamera found in scene.");
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (GUILayout.Button("Open Console"))
-                        {
-                            foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
-                            {
-                                item.Show();
-                            }
-                        }
-
-                        if (GUILayout.Button("Close Console"))
-                        {
-                            foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
-                            {
-                                item.Hide();
-                            }
-                        }
-                    }
-                    GUILayout.EndHorizontal();
                 }
-                if(Players.InGame.Count > 0)
+                if (Players.InGame.Count > 0)
                 {
                     CenterLabel("Execute Object");
                     GUILayout.BeginHorizontal();
@@ -298,6 +547,8 @@ namespace TestUnityPlugin
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Teleport To"))
+                        Players.TeleportTo();
                     if (GUILayout.Button("Revive"))
                         Players.Respawn();
                     if (GUILayout.Button("Kill"))
@@ -320,7 +571,7 @@ namespace TestUnityPlugin
                     GUILayout.BeginHorizontal();
                     if (GUILayout.Button("Fly Towards Oneself"))
                         Players.DragToLocal();
-                    if (GameObject.FindObjectOfType<PlayerCustomizer>() && Players.GetChoosedPlayerCount() == 1 && GUILayout.Button("强制进入终端"))
+                    if (GameObject.FindObjectOfType<PlayerCustomizer>() && Players.GetChoosedPlayerCount() == 1 && GUILayout.Button("Force entry into terminal"))
                         Players.ForceEnterTerminal();
                     if (GUILayout.Button("Enter Realm"))
                         Players.JoinRealm();
@@ -690,24 +941,191 @@ namespace TestUnityPlugin
                     MainMenuHandler.Instance.SilentHost();
 
                 CenterLabel("Miscellaneous");
-                if (GUILayout.Button("Dump Items List To Console"))
-                    Items.DumpItemsToConsole();
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Open Extractor"))
+                    {
+                        SurfaceNetworkHandler.UnlockExtractor();
+                    }
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Open Console"))
+                    {
+                        foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                        {
+                            item.Show();
+                        }
+                    }
 
-                if (GUILayout.Button("Open GitHub Project Link"))
-                    Win32.ShellExecuteA(IntPtr.Zero, new StringBuilder("open"), new StringBuilder(@"https://github.com/xiaodo1337/Content-Warning-Cheat"), new StringBuilder(), new StringBuilder(), 0);
-                CenterLabel("Strong condemnation of those domestically monetizing GitHub open-source code");
+                    if (GUILayout.Button("Close Console"))
+                    {
+                        foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                        {
+                            item.Hide();
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Black Screen/Break Lobby"))
+                {
+                    foreach (PhotonGameLobbyHandler handler in FindObjectsOfType<PhotonGameLobbyHandler>())
+                    {
+                        handler.photonView.RPC("RPC_StartTransition", RpcTarget.Others, Array.Empty<object>());
+                        RetrievableResourceSingleton<TransitionHandler>.Instance.TransitionToBlack(3f, delegate
+                        {
+                            if (!PhotonNetwork.InRoom)
+                            {
+                                return;
+                            }
+                            VerboseDebug.Log("Returning To Surface!");
+                            RetrievableSingleton<PersistentObjectsHolder>.Instance.FindPersistantObjects();
+                            PhotonNetwork.LoadLevel("SurfaceScene");
+                        }, 3f);
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginVertical("Troll Video Selection", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+
+                    // Assuming isFolderDropdownVisible and folderButtonText are defined similarly to your original variables
+                    if (GUILayout.Button(folderButtonText/*, GUILayout.Width(200), GUILayout.Height(40)*/))
+                    {
+                        isFolderDropdownVisible = !isFolderDropdownVisible; // Toggle visibility of the dropdown
+                    }
+
+                    if (isFolderDropdownVisible)
+                    {
+                        // Set the scroll area for the folders dropdown
+                        folderScrollPosition = GUILayout.BeginScrollView(folderScrollPosition, GUILayout.Width(270), GUILayout.Height(200));
+
+                        // Get the directory where the current DLL is executing
+                        string directoryOfExecutingAssembly = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+                        // Define the path to the CWVideos folder relative to the DLL's location
+                        string cwVideosPath = Path.Combine(directoryOfExecutingAssembly, "CWVideos");
+
+                        // Ensure the CWVideos directory exists
+                        if (Directory.Exists(cwVideosPath))
+                        {
+                            // Get all directories within the CWVideos folder
+                            string[] folderPaths = Directory.GetDirectories(cwVideosPath);
+                            string[] folderNames = new string[folderPaths.Length];
+
+                            // Extract just the folder names for display
+                            for (int i = 0; i < folderPaths.Length; i++)
+                            {
+                                folderNames[i] = new DirectoryInfo(folderPaths[i]).Name;
+                            }
+
+                            // Create a button for each folder
+                            for (int i = 0; i < folderNames.Length; i++)
+                            {
+                                if (GUILayout.Button(folderNames[i] /*GUILayout.Width(190), GUILayout.Height(30)*/))
+                                {
+                                    selectedFolderIndex = i; // Track the selected index
+                                    folderButtonText = folderNames[i]; // Update the button text to show the selected folder
+                                    selectedVideo = folderPaths[i];
+                                    Debug.Log("Selected Video " + selectedVideo);
+                                    isFolderDropdownVisible = false; // Close the dropdown
+                                }
+                            }
+                        }
+                        else
+                        {
+                            GUILayout.Label("CWVideos folder not found.");
+                        }
+
+                        GUILayout.EndScrollView();
+                    }
+
+                }
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Convert new Videos"))
+                {
+                    string directoryOfExecutingAssembly = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+                    // Define the path to the VideosToConvert folder relative to the DLL's location
+                    string videosToConvertPath = Path.Combine(directoryOfExecutingAssembly, "VideosToConvert");
+                    string cwVideosPath = Path.Combine(directoryOfExecutingAssembly, "CWVideos");
+
+                    // Ensure the VideosToConvert directory exists
+                    if (Directory.Exists(videosToConvertPath))
+                    {
+                        // Get all files within the VideosToConvert folder
+                        string[] filePaths = Directory.GetFiles(videosToConvertPath);
+
+                        if (filePaths.Length == 0)
+                        {
+                            GUILayout.Label("No videos to convert.");
+                        }
+                        else
+                        {
+                            foreach (string filePath in filePaths)
+                            {
+                                // Perform conversion for each file
+                                string fileName = Path.GetFileName(filePath); // Get the file name
+                                Conversor conversor = new Conversor();
+                                conversor.EncodeVideo(filePath, cwVideosPath, fileName);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.Label("VideosToConvert folder not found.");
+                    }
+                }
+                if (GUILayout.Button("Analyze new Videos"))
+                {
+                    string directoryOfExecutingAssembly = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+                    // Define the path to the VideosToConvert folder relative to the DLL's location
+                    string videosToConvertPath = Path.Combine(directoryOfExecutingAssembly, "VideosToConvert");
+
+                    // Ensure the VideosToConvert directory exists
+                    if (Directory.Exists(videosToConvertPath))
+                    {
+                        // Get all files within the VideosToConvert folder
+                        string[] filePaths = Directory.GetFiles(videosToConvertPath);
+
+                        if (filePaths.Length == 0)
+                        {
+                            GUILayout.Label("No videos to analyze.");
+                        }
+                        else
+                        {
+                            foreach (string filePath in filePaths)
+                            {
+                                // Perform conversion for each file
+                                Conversor conversor = new Conversor();
+                                conversor.AnalyzeVideo(filePath, directoryOfExecutingAssembly);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.Label("VideosToConvert folder not found.");
+                    }
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.EndVertical();
                 GUILayout.EndArea();
             }
         }
+
         void CreateOrClearDirectory(string path)
         {
             if (Directory.Exists(path))
             {
                 Directory.Delete(path, true);
-                Debug.Log($"Directory cleared: {path}");
+                Debug.Log($"Clip Directory cleared");
             }
             Directory.CreateDirectory(path);
-            Debug.Log($"Directory created: {path}");
+            Debug.Log($"Clip Directory created");
         }
         void CenterLabel(string label)
         {
