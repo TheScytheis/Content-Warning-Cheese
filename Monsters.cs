@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using HarmonyLib;
 using Photon.Pun;
+using TestUnityPlugin;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -43,18 +44,6 @@ namespace TestUnityPlugin
             "Toolkit_Wisk",
             "Weeping"
         };
-        public static bool AutoRemoveLocalMonsters = false;
-        public static void Run()
-        {
-            if(AutoRemoveLocalMonsters) RemoveMonsters();
-        }
-        public static void RemoveMonsters()
-        {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
-            {
-                GameObject.Destroy(monster.transform.parent);
-            }
-        }
         public static void SpawnMonster(string monster)
         {
             PhotonNetwork.Instantiate(monster, UsefulFuncs.GetCrosshairPosition(true), UnityEngine.Quaternion.identity, 0, null);
@@ -72,16 +61,16 @@ namespace TestUnityPlugin
         {
             Monster.KillAll();
         }
-        public static void KillAll()
+        public static void ReviveAll()
         {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
                 monster.transform.parent.GetComponent<Player>().refs.view.RPC("RPCA_PlayerRevive", RpcTarget.All, new object[] { });
             }
         }
-        public static void Die()
+        public static void KillAll()
         {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
                 monster.transform.parent.GetComponent<Player>().refs.view.RPC("RPCA_PlayerDie", RpcTarget.All, new object[] { });
             }
@@ -99,28 +88,28 @@ namespace TestUnityPlugin
             if (bomb_id == byte.MaxValue)
                 return;
 
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
-                Items.SpawnItem(new byte[] { bomb_id });
+                Items.SpawnItem(new byte[] { bomb_id }, monster.transform.parent.position);
             }
         }
         public static void Falldown()
         {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
                 monster.transform.parent.GetComponent<Player>().refs.view.RPC("RPCA_Fall", RpcTarget.All, new object[] { 5f });
             }
         }
         public static void Cum()
         {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
                 PhotonNetwork.Instantiate("ExplodedGoop", monster.groundTransform.position, Quaternion.identity);
             }
         }
         public static void DragToLocal()
         {
-            foreach (Bot monster in GameObject.FindObjectsOfType<Bot>())
+            foreach (Bot monster in Data.BotsList)
             {
                 Vector3 Dir = Player.localPlayer.refs.headPos.position - monster.centerTransform.position;
                 monster.transform.parent.GetComponent<Player>().refs.view.RPC("RPCA_TakeDamageAndAddForce", RpcTarget.All, new object[] { 0f, Dir.normalized * 8f, 1.5f });

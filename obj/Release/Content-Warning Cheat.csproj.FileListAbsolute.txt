@@ -5,3 +5,8 @@ C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Release\Content-.2EC26C0F.Up2Date
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Release\TestUnityPlugin.dll
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Cheese\obj\Release\TestUnityPlugin.pdb
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\Content-Warning Cheat.csproj.AssemblyReference.cache
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\Content-Warning Cheat.csproj.CoreCompileInputs.cache
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\TestUnityPlugin.dll
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\TestUnityPlugin.pdb
+C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\Content-.2EC26C0F.Up2Date

@@ -135,6 +135,7 @@ namespace TestUnityPlugin
                 return;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.Confined;
+            GUI.backgroundColor = Color.black;
             windowRect = GUI.Window(114519810, windowRect, WindowFunc, "Holden's Content Warning MOD!");
         }
 
@@ -442,27 +443,6 @@ namespace TestUnityPlugin
             if (Input.GetKeyDown(KeyCode.Insert))
                 DisplayingWindow = !DisplayingWindow;
 
-            if (Input.GetKeyDown(KeyCode.F1) && PhotonNetwork.CurrentRoom != null)
-            {
-                PhotonNetwork.SetMasterClient(PhotonNetwork.LocalPlayer);
-                foreach (Player player in GameObject.FindObjectsOfType<Player>())
-                {
-                    if (player.IsLocal && !player.ai)
-                    {
-                        //PhotonNetwork.NetworkingClient.ChangeLocalID(PhotonNetwork.MasterClient.ActorNumber);
-                        /*
-                        byte id = 43;
-                        player.refs.view.RPC("RPC_PlayEmote", RpcTarget.All, new object[] { id });
-                        Traverse.Create(GameObject.FindObjectOfType<PlayerCustomizer>()).Field("view_g").GetValue<PhotonView>().RPC("RPCM_RequestEnterTerminal", RpcTarget.MasterClient, new object[]
-                        {
-                            player.refs.view.ViewID
-                        });
-                        ShadowRealmHandler.instance.TeleportPlayerToRandomRealm(player);
-                        */
-                    }
-                }
-            }
-
             MurderBind();
             ShadowRealmBind();
             SelectPlayer();
@@ -470,9 +450,9 @@ namespace TestUnityPlugin
             Revive();
             FakeTP();
             TrollFilm();
+            Data.UpdateData();
             Players.Run();
             Items.Run();
-            Monsters.Run();
             Misc.Run();
         }
         public bool DisplayingWindow = false;
@@ -630,7 +610,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -669,7 +649,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -708,7 +688,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -747,7 +727,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -786,7 +766,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -825,7 +805,7 @@ namespace TestUnityPlugin
                                     break;
 
                                 case Items.SpawnType.CreatePickup:
-                                    Items.SpawnItem(new byte[] { item.Key });
+                                    Items.SpawnItem(new byte[] { item.Key }, UsefulFuncs.GetCrosshairPosition(MaxDistance: 5f));
                                     break;
 
                                 case Items.SpawnType.CallDrone:
@@ -860,10 +840,10 @@ namespace TestUnityPlugin
                 {
                     CenterLabel("Functions");
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Remove"))
-                        Monsters.KillAll();
+                    if (GUILayout.Button("Revive All"))
+                        Monsters.ReviveAll();
                     if (GUILayout.Button("Kill AI"))
-                        Monsters.Die();
+                        Monsters.KillAll();
                     if (GUILayout.Button("Spawn Bomb"))
                         Monsters.Explode();
                     if (GUILayout.Button("Fall Down"))
@@ -872,8 +852,6 @@ namespace TestUnityPlugin
                         Monsters.Cum();
                     if (GUILayout.Button("Drag Nearby"))
                         Monsters.DragToLocal();
-                    GUILayout.EndHorizontal();
-                    Monsters.AutoRemoveLocalMonsters = GUILayout.Toggle(Monsters.AutoRemoveLocalMonsters, "Automatically Remove Local Monsters");
                     if (GUILayout.Button("Make Dogs Bark"))
                     {
                         Monsters.MakeMouthesScream();
@@ -882,6 +860,7 @@ namespace TestUnityPlugin
                     {
                         Monsters.ClearAllMonsters();
                     }
+                    GUILayout.EndHorizontal();
 
                     CenterLabel("Spawn");
                     int count = 0;

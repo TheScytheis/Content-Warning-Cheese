@@ -1,14 +1,46 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\",
+  "WorkspaceRootPath": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff - copy\\conversor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:conversor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\players.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:players.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\misc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:misc.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\esp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:esp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\items.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:items.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\usefulfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:usefulfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\renderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:renderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\monsters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:monsters.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\data.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:data.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|c:\\users\\drgui\\onedrive\\documentos\\github\\content-warning\\content-warning-stuff\\conversor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{14AA83F7-BAA2-4332-BE81-E878CCF60E56}|Content-Warning Cheat.csproj|solutionrelative:conversor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files (x86)\\Steam\\steamapps\\common\\Content Warning\\BepInEx\\plugins\\GAMEvideo_analysis.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
@@ -24,11 +56,128 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UsefulFuncs.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\UsefulFuncs.cs",
+              "RelativeDocumentMoniker": "UsefulFuncs.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\UsefulFuncs.cs",
+              "RelativeToolTip": "UsefulFuncs.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T16:08:25.845Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Renderer.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Renderer.cs",
+              "RelativeDocumentMoniker": "Renderer.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Renderer.cs",
+              "RelativeToolTip": "Renderer.cs",
+              "ViewState": "AQIAAA0AAAAAAAAAAAAQwCIAAABPAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T16:07:29.122Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Players.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Players.cs",
+              "RelativeDocumentMoniker": "Players.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Players.cs",
+              "RelativeToolTip": "Players.cs",
+              "ViewState": "AQIAAFIBAAAAAAAAAAAAAG8BAAB6AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T16:01:30.733Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Misc.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Misc.cs",
+              "RelativeDocumentMoniker": "Misc.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Misc.cs",
+              "RelativeToolTip": "Misc.cs",
+              "ViewState": "AQIAACEAAAAAAAAAAAAYwBkAAAAvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T16:01:17.044Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Monsters.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Monsters.cs",
+              "RelativeDocumentMoniker": "Monsters.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Monsters.cs",
+              "RelativeToolTip": "Monsters.cs",
+              "ViewState": "AQIAAAMAAAAAAAAAAAAcwBMAAAAWAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T16:01:02.918Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Items.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Items.cs",
+              "RelativeDocumentMoniker": "Items.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Items.cs",
+              "RelativeToolTip": "Items.cs",
+              "ViewState": "AQIAAN0AAAAAAAAAAAAnwPkAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T15:55:35.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "ESP.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\ESP.cs",
+              "RelativeDocumentMoniker": "ESP.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\ESP.cs",
+              "RelativeToolTip": "ESP.cs",
+              "ViewState": "AQIAAGEAAAAAAAAAAAAcwAsAAABBAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T15:55:17.944Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Main.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Main.cs",
+              "RelativeDocumentMoniker": "Main.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Main.cs",
+              "RelativeToolTip": "Main.cs",
+              "ViewState": "AQIAAAsDAAAAAAAAAAAEwB4DAAA5AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-17T00:37:34.33Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Data.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Data.cs",
+              "RelativeDocumentMoniker": "Data.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Data.cs",
+              "RelativeToolTip": "Data.cs",
+              "ViewState": "AQIAAAEAAAAAAAAAAAAAAAsAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-04-22T15:54:58.061Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "MODvideo_analysis.json",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Content Warning\\BepInEx\\plugins\\MODvideo_analysis.json",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\Steam\\steamapps\\common\\Content Warning\\BepInEx\\plugins\\MODvideo_analysis.json",
@@ -40,7 +189,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 10,
               "Title": "GAMEvideo_analysis.json",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Content Warning\\BepInEx\\plugins\\GAMEvideo_analysis.json",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\..\\..\\Program Files (x86)\\Steam\\steamapps\\common\\Content Warning\\BepInEx\\plugins\\GAMEvideo_analysis.json",
@@ -52,28 +201,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 9,
               "Title": "Conversor.cs",
-              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\Conversor.cs",
+              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Conversor.cs",
               "RelativeDocumentMoniker": "Conversor.cs",
-              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\Conversor.cs",
+              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff\\Conversor.cs",
               "RelativeToolTip": "Conversor.cs",
               "ViewState": "AQIAAAgAAAAAAAAAAAAQwA4AAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-04-17T22:04:16.206Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Main.cs",
-              "DocumentMoniker": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\Main.cs",
-              "RelativeDocumentMoniker": "Main.cs",
-              "ToolTip": "C:\\Users\\drgui\\OneDrive\\Documentos\\GitHub\\Content-Warning\\Content-Warning-Stuff - Copy\\Main.cs",
-              "RelativeToolTip": "Main.cs",
-              "ViewState": "AQIAABAEAAAAAAAAAAApwDAEAABYAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-04-17T00:37:34.33Z"
             }
           ]
         }

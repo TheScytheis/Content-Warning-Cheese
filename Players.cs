@@ -35,28 +35,8 @@ namespace TestUnityPlugin
             Player player = Player.localPlayer;
             if (player == null)
             {
-                InRealm.Clear();
                 InGame.Clear();
                 return;
-            }
-
-            foreach (Player __player in GameObject.FindObjectsOfType<Player>())
-            {
-                if (__player.ai || __player.IsLocal || InGame.ContainsKey(__player))
-                    continue;
-                InGame.Add(__player, false);
-            }
-            foreach (KeyValuePair<Player, bool> keyValuePair in InGame)
-            {
-                if (keyValuePair.Key != null)
-                    continue;
-                InGame.Remove(keyValuePair.Key);
-            }
-            foreach (Player __player in InRealm)
-            {
-                if (__player != null)
-                    continue;
-                InRealm.Remove(__player);
             }
 
             if (InfinityHealth)
@@ -86,6 +66,7 @@ namespace TestUnityPlugin
 
             player.refs.controller.sprintMultiplier = 2.3f * SprintMultipiler;
 
+            CustomPlayerFace.ChangeFace();
         }
         public static void JoinRealm(bool local = false)
         {
@@ -307,20 +288,10 @@ namespace TestUnityPlugin
     {
         public static List<string> Name = new List<string>
         {
-            "注意看！",
-            "Mamba Back！",
-            "是的孩子们，我回来了！",
-            "还有，那件事情我们是自愿的。",
-            "我嘞个骚杠",
-            "我想陆管了",
-            "我嘞个豆",
-            "兄弟你好香",
-            "麻麻生的",
-            "哈吉米哈吉米哈吉米莫那没卤多",
-            "你有非常好高速运转的机器进入中国",
-            "阿米挪思",
-            "闭嘴！我的爸爸在为 米哈游 工作！所以他可以在你的电恼上安装原神！",
-
+            "0_0",
+            "0_-",
+            "-_-",
+            "-_0",
         };
         public static int CurrentNamePos = 0;
         public static float ColorHUE = 0.005f;
@@ -332,6 +303,7 @@ namespace TestUnityPlugin
 
         public static void ChangeFace()
         {
+            /*
             //color
             ColorHUE = ColorHUE >= 1.0f ? 0.005f : ColorHUE + 0.005f;
             //size
@@ -352,7 +324,7 @@ namespace TestUnityPlugin
             if (Rotation > 20f)
                 Direction = false;
             else if (Rotation < -20f)
-                Direction = true;
+                Direction = true;*/
 
             if (CanChangeName)
             {
@@ -363,10 +335,10 @@ namespace TestUnityPlugin
 
             Player.localPlayer.refs.view.RPC("RPCA_SetAllFaceSettings", RpcTarget.AllBuffered, new object[]
             {
-                        ColorHUE,
+                        null,
                         Player.localPlayer.refs.visor.visorColorIndex,
                         Player.localPlayer.refs.visor.visorFaceText.text,
-                        AdjustAngle(Rotation),
+                        0f,
                         Scale
             });
         }
@@ -383,8 +355,6 @@ namespace TestUnityPlugin
         }
         private static async void RollString(string str, int displayslot)
         {
-            str = str.PadLeft(str.Length + displayslot, ' ');
-            str = str.PadRight(str.Length + displayslot, ' ');
             int currentPos = 0;
             while (currentPos + displayslot <= str.Length)
             {
@@ -393,7 +363,9 @@ namespace TestUnityPlugin
                 await Task.Delay(400);
                 await Task.Run(() =>
                 {
-                    Player.localPlayer.refs.view.RPC("RPCA_SetVisorText", RpcTarget.AllBuffered, new object[] { str.Substring(currentPos, displayslot) });
+                    System.Random rnd = new System.Random();
+                    string randomName = Name[rnd.Next(Name.Count)];
+                    Player.localPlayer.refs.view.RPC("RPCA_SetVisorText", RpcTarget.AllBuffered, new object[] { randomName });
                 });
                 
                 currentPos++;

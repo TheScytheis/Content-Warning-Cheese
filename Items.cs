@@ -72,7 +72,7 @@ namespace TestUnityPlugin
                         continue;
                     }
                     bool found = false;
-                    foreach (KeyValuePair <ItemType, List<string>> itemtypekv in ItemsTypeDictionary)
+                    foreach (KeyValuePair<ItemType, List<string>> itemtypekv in ItemsTypeDictionary)
                     {
                         found = false;
                         foreach (string str in itemtypekv.Value)
@@ -85,21 +85,13 @@ namespace TestUnityPlugin
                         }
                         if (found) break;
                     }
-                    if(!found)
+                    if (!found)
                     {
                         ItemsTypeList[ItemType.Others].Add(item.id, item.name);
                     }
                 }
-                /*
-                foreach (Item item in ItemsList)
-                {
-                    if (item.purchasable || item.name.Contains("GrabberArm") || item.name.Contains("Flashlight") || 
-                        item.name == "WalkieTalkie" || item.name == "Radio" || item.name.Contains("Emote_"))
-                        continue;
-                    ItemsTypeList[ItemType.Others].Add(item.id, item.name);
-                }
-                */
             }
+
             if (NoGrabberLimit) SetGrabberArmNotBreak();
             if (BlockBombSpawn) CheckIsBombSpawn();
             if (InfinityPower) SetMaxBattery();
@@ -215,7 +207,7 @@ namespace TestUnityPlugin
                 if (SpawnMethod == SpawnType.CallDrone)
                     SpawnItem(new byte[] { itemkeypair.Key });
                 if (SpawnMethod == SpawnType.CreatePickup)
-                    SpawnItem(new byte[] { itemkeypair.Key });
+                    SpawnItem(new byte[] { itemkeypair.Key }, UsefulFuncs.GetCrosshairPosition(true, 1.5f));
             }
         }
         public static void SpawnAllItems()
@@ -231,7 +223,7 @@ namespace TestUnityPlugin
             if (SpawnMethod == SpawnType.CallDrone)
                 SpawnItem(array_id.ToArray());
             if (SpawnMethod == SpawnType.CreatePickup)
-                SpawnItem(array_id.ToArray());
+                SpawnItem(array_id.ToArray(), UsefulFuncs.GetCrosshairPosition(true, 1.5f));
         }
         public static void SpawnItem(byte itemid)
         {
@@ -240,7 +232,11 @@ namespace TestUnityPlugin
             if (!inventory.TryAddItem(new ItemDescriptor(item, new ItemInstanceData(new Guid()))))
                 HelmetText.Instance.SetHelmetText($"Unable to add {item.name} to inventory", 3f);
         }
-
+        public static void SpawnItem(byte[] itemid, Vector3 pos)
+        {
+            for (int i = 0; i < itemid.Length; i++)
+                Player.localPlayer.RequestCreatePickup(itemid[i], new ItemInstanceData(Guid.NewGuid()), pos, UnityEngine.Random.rotation, (Vector3.down + UnityEngine.Random.onUnitSphere) * 2f, UnityEngine.Random.onUnitSphere * 5f);
+        }
         public static void SpawnItem(byte[] itemid)
         {
             try
@@ -252,7 +248,6 @@ namespace TestUnityPlugin
                 HelmetText.Instance.SetHelmetText("Unable to use drone delivery in the nether", 3f);
             }
         }
-
         public static void DestoryDropedItems()
         {
             foreach (Pickup pickup in GameObject.FindObjectsOfType<Pickup>())
