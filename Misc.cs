@@ -67,5 +67,6 @@ namespace TestUnityPlugin
                 MainMenuHandler.Instance.JoinRandom();
             }
         }
+
     }
 }

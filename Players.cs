@@ -9,8 +9,10 @@ using System.Xml.Linq;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
+using Steamworks;
 using UnityEngine;
 using UnityEngine.LowLevel;
+using UnityEngine.Rendering;
 using UnityEngine.SocialPlatforms;
 using static HelperFunctions;
 using static UnityEngine.GraphicsBuffer;
@@ -19,6 +21,8 @@ namespace TestUnityPlugin
 {
     internal class Players
     {
+        public static bool ifScreamingThenPunish = false;
+        public static bool isCheckingInventory = false;
         public static bool InfinityHealth = false;
         public static bool InfinityOxy = false;
         public static bool InfinityStamina = true;
@@ -66,7 +70,7 @@ namespace TestUnityPlugin
 
             player.refs.controller.sprintMultiplier = 2.3f * SprintMultipiler;
 
-            CustomPlayerFace.ChangeFace();
+            ///CustomPlayerFace.ChangeFace();
         }
         public static void JoinRealm(bool local = false)
         {
@@ -91,20 +95,38 @@ namespace TestUnityPlugin
             {
                 if (Player.localPlayer.data.playerIsInRealm)
                 {
-                    Debug.Log($"X:{Player.localPlayer.data.groundPos.x} Y:{Player.localPlayer.data.groundPos.y} Z:{Player.localPlayer.data.groundPos.z}");
-                    GameObject[] currentRealms = Traverse.Create(ShadowRealmHandler.instance).Field("currentRealms").GetValue<GameObject[]>();
-                    for (int i = 0; i < currentRealms.Length; i++)
+                    // Access the private field 'currentRealms'
+                    FieldInfo fieldInfo = typeof(ShadowRealmHandler).GetField("currentRealms", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (fieldInfo != null)
                     {
-                        if (currentRealms[i] && currentRealms[i].GetComponentInChildren<RealmGateTrigger>().playerInRealm != Player.localPlayer)
-                            continue;
-                        //暂时没传送功能
-                        Traverse.Create(ShadowRealmHandler.instance).Field("view").GetValue<PhotonView>().RPC("RPCA_RemovePlayerFromRealm", RpcTarget.All, new object[]
+                        GameObject[] currentRealms = (GameObject[])fieldInfo.GetValue(ShadowRealmHandler.instance);
+
+                        // Find the realm the player is currently in
+                        foreach (GameObject realm in currentRealms)
                         {
-                            i,
-                            Player.localPlayer.refs.view.ViewID,
-                            new Vector3(-0.1499804f, 0.06603602f, 0.01805818f)
-                        });
-                        break;
+                            if (realm != null)
+                            {
+                                RealmGateTrigger triggerComponent = realm.GetComponentInChildren<RealmGateTrigger>();
+                                // Use reflection to access the 'realmData' field
+                                FieldInfo realmDataField = typeof(RealmGateTrigger).GetField("realmData", BindingFlags.Instance | BindingFlags.NonPublic);
+                                Realm realmData = (Realm)realmDataField.GetValue(triggerComponent);
+
+                                if (realmData != null && realmData.playersInRealm.Contains(Player.localPlayer))
+                                {
+                                    // Access the private method 'PlayerLeaveRealm'
+                                    MethodInfo methodInfo = typeof(ShadowRealmHandler).GetMethod("PlayerLeaveRealm", BindingFlags.NonPublic | BindingFlags.Instance);
+                                    if (methodInfo != null)
+                                    {
+                                        methodInfo.Invoke(ShadowRealmHandler.instance, new object[] { Player.localPlayer, realm });
+                                        break; // Exit after the correct realm is found and the method is invoked
+                                    }
+                                    else
+                                    {
+                                        Debug.LogError("Method 'PlayerLeaveRealm' not found.");
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -117,18 +139,38 @@ namespace TestUnityPlugin
                     if (!keyValuePair.Key.data.playerIsInRealm)
                         continue;
 
-                    GameObject[] currentRealms = Traverse.Create(ShadowRealmHandler.instance).Field("currentRealms").GetValue<GameObject[]>();
-                    for (int i = 0; i < currentRealms.Length; i++)
+                    // Access the private field 'currentRealms'
+                    FieldInfo fieldInfo = typeof(ShadowRealmHandler).GetField("currentRealms", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (fieldInfo != null)
                     {
-                        if (currentRealms[i] && currentRealms[i].GetComponentInChildren<RealmGateTrigger>().playerInRealm != keyValuePair.Key)
-                            continue;
-                        Traverse.Create(ShadowRealmHandler.instance).Field("view").GetValue<PhotonView>().RPC("RPCA_RemovePlayerFromRealm", RpcTarget.All, new object[]
+                        GameObject[] currentRealms = (GameObject[])fieldInfo.GetValue(ShadowRealmHandler.instance);
+
+                        // Find the realm the player is currently in
+                        foreach (GameObject realm in currentRealms)
                         {
-                            i,
-                            keyValuePair.Key.refs.view.ViewID,
-                            Player.localPlayer.refs.headPos.position
-                        });
-                        break;
+                            if (realm != null)
+                            {
+                                RealmGateTrigger triggerComponent = realm.GetComponentInChildren<RealmGateTrigger>();
+                                // Use reflection to access the 'realmData' field
+                                FieldInfo realmDataField = typeof(RealmGateTrigger).GetField("realmData", BindingFlags.Instance | BindingFlags.NonPublic);
+                                Realm realmData = (Realm)realmDataField.GetValue(triggerComponent);
+
+                                if (realmData != null && realmData.playersInRealm.Contains(keyValuePair.Key))
+                                {
+                                    // Access the private method 'PlayerLeaveRealm'
+                                    MethodInfo methodInfo = typeof(ShadowRealmHandler).GetMethod("PlayerLeaveRealm", BindingFlags.NonPublic | BindingFlags.Instance);
+                                    if (methodInfo != null)
+                                    {
+                                        methodInfo.Invoke(ShadowRealmHandler.instance, new object[] { keyValuePair.Key, realm });
+                                        break; // Exit after the correct realm is found and the method is invoked
+                                    }
+                                    else
+                                    {
+                                        Debug.LogError("Method 'PlayerLeaveRealm' not found.");
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -146,6 +188,87 @@ namespace TestUnityPlugin
                 });
             }
         }
+
+        public static void TrollPlayerTerminal()
+        {
+            foreach (var keyValuePair in InGame)
+            {
+                if (!keyValuePair.Value)
+                    continue;
+                PlayerCustomizer terminal = GameObject.FindObjectOfType<PlayerCustomizer>();
+                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RPCM_RequestEnterTerminal", RpcTarget.MasterClient, new object[]
+                {
+                    keyValuePair.Key.refs.view.ViewID
+                });
+                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RCP_SetFaceText", RpcTarget.MasterClient, new object[]
+                {
+                    "GAY"
+                });
+                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RPCA_PickColor", RpcTarget.MasterClient, new object[]
+                {
+                    3
+                });
+                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RPCA_PlayerLeftTerminal", RpcTarget.MasterClient, new object[]
+                {
+                    true
+                });
+            }
+        }
+
+        public static void DeleteInventory()
+        {
+            foreach (var keyValuePair in InGame)
+            {
+                if (!keyValuePair.Value)
+                    continue;
+                keyValuePair.Key.TryGetInventory(out var inv);
+                inv.Clear();
+            }
+        }
+
+        public static void StealItem(Player player, ItemDescriptor item)
+        {
+            player.TryGetInventory(out var enemyInv);
+            if(enemyInv != null)
+            {
+                enemyInv.TryGetSlotWithItem(item.item, out var slot);
+                if (slot != null)
+                {
+                    Player.localPlayer.TryGetInventory(out var myInv);
+                    myInv.TryAddItem(slot.ItemInSlot);
+                    enemyInv.TryRemoveItemFromSlot(slot.SlotID, out var removeditem);
+                }
+            }
+        }
+
+        public static Dictionary<Player, List<ItemDescriptor>> GetPlayerInventoryItems()
+        {
+            Dictionary<Player, List<ItemDescriptor>> InvItems = new Dictionary<Player, List<ItemDescriptor>>();
+            foreach (var keyValuePair in InGame)
+            {
+                if (!keyValuePair.Value)
+                    continue;
+
+                if (keyValuePair.Key.TryGetInventory(out var inv))
+                {
+                    List<ItemDescriptor> items = new List<ItemDescriptor>();
+                    for (int i = 0; i <= 6; i++)
+                    {
+                        if (inv.TryGetItemInSlot(i, out ItemDescriptor item))
+                        {
+                            items.Add(item);
+                        }
+                    }
+                    if (items.Count > 0)
+                    {
+                        InvItems.Add(keyValuePair.Key, items);
+                    }
+                }
+            }
+            return InvItems;
+        }
+
+
         public static void PlayEmote(byte id)
         {
             foreach (var keyValuePair in InGame)
@@ -155,6 +278,44 @@ namespace TestUnityPlugin
                 keyValuePair.Key.refs.view.RPC("RPC_PlayEmote", RpcTarget.All, new object[] { id });
             }
         }
+
+        public static Dictionary<Player, float> invertedControls = new Dictionary<Player, float>();
+        private static float interval = 25f;
+
+        public static void IfSqueakThenPunish(bool local = true)
+        {
+            foreach (var keyValuePair in InGame)
+            {
+                if (keyValuePair.Key.data.microphoneValue >= 0.97f)
+                {
+                    MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (methodInfo != null)
+                    {
+                        methodInfo.Invoke(keyValuePair.Key, new object[] { 1f, Vector3.up * 10 * keyValuePair.Key.data.microphoneValue, 1f });
+                        if (!invertedControls.ContainsKey(keyValuePair.Key))
+                        {
+                            keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, 10f });
+                            invertedControls.Add(keyValuePair.Key, 0f);
+                        }
+                        else if (invertedControls.ContainsKey(keyValuePair.Key))
+                        {
+                            keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, 10f });
+                            invertedControls[keyValuePair.Key] = 0f;
+                        }
+                    }
+                }
+                if(invertedControls.ContainsKey(keyValuePair.Key) && keyValuePair.Key.data.microphoneValue <= 0.7)
+                {
+                    invertedControls[keyValuePair.Key] += Time.deltaTime;
+                }
+                if(invertedControls.ContainsKey(keyValuePair.Key) && invertedControls[keyValuePair.Key] >= interval)
+                {
+                    invertedControls.Remove(keyValuePair.Key);
+                    keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { 1f, 0f });
+                }
+            }
+        }
+
         public static void Respawn(bool local = false)
         {
             if (local)

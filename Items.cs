@@ -14,6 +14,7 @@ namespace TestUnityPlugin
     internal class Items
     {
         public static Item[] ItemsList { get; set; }
+        public static Item Camera;
         public static bool PartyMode = true;
         public static bool InfinityPower = true;
         public static bool NoGrabberLimit = true;
@@ -66,6 +67,10 @@ namespace TestUnityPlugin
 
                 foreach (Item item in ItemsList)
                 {
+                    if (Camera == null && item.name.Contains("Camera"))
+                    {
+                        Camera = item;
+                    }
                     if (item.name.Contains("Emote_"))
                     {
                         ItemsTypeList[ItemType.Emotes].Add(item.id, item.name);
