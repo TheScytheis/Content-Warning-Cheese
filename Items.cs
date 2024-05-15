@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
+using pworld.Scripts;
 using UnityEngine;
 using Zorro.Core;
 
@@ -22,6 +23,7 @@ namespace TestUnityPlugin
         public enum SpawnType
         {
             AddToInventory,
+            SpawnOnOtherInv,
             CreatePickup,
             CallDrone
         }
@@ -253,6 +255,21 @@ namespace TestUnityPlugin
                 HelmetText.Instance.SetHelmetText("Unable to use drone delivery in the nether", 3f);
             }
         }
+
+        public static void SpawnItem(byte itemid, bool isforplayers)
+        {
+            foreach (var keyValuePair in Players.InGame)
+            {
+                if (!keyValuePair.Value)
+                    continue;
+                ItemDatabase.TryGetItemFromID(itemid, out Item item);
+                keyValuePair.Key.TryGetInventory(out var target);
+                target.TryGetFeeSlot(out var slot);
+                target.SyncAddToSlot(slot.SlotID, new ItemDescriptor(item, new ItemInstanceData(new Guid())));
+                keyValuePair.Key.refs.view.RPC("RPC_SelectSlot", RpcTarget.All, slot.SlotID);
+            }
+        }
+
         public static void DestoryDropedItems()
         {
             foreach (Pickup pickup in GameObject.FindObjectsOfType<Pickup>())

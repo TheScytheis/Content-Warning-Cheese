@@ -22,7 +22,7 @@ namespace TestUnityPlugin
         private Transform page;
         private Canvas canvas;
         private MainMenuMainPage main;
-        private static GameObject btnToCopy;
+        public static GameObject btnToCopy;
 
         private void Awake()
         {
@@ -92,43 +92,18 @@ namespace TestUnityPlugin
             MainMenuHandler.SteamLobbyHandler.Reflect().Invoke("JoinLobby", true, lobbies[Random.Range(0, lobbies.Count)]);
         }
 
-        private void OnJoinRandomButtonClicked() => HelloWorld.Instance.StartCoroutine(JoinRandomPrivateGame());
+        private void OnJoinRandomButtonClicked() => HelloWorld.Instance.StartCoroutine(HelloWorld.JoinRandomPrivateGame());
         private void OnViewLobbiesButtonClicked()
         {
-            Modal.ShowError("Feature Coming Soon!", "This feature is currently in development and will be available in a future update.");
-            //SpookPageUI.TransitionToPage<MainMenuViewLobbiesPage>();
+            //Modal.ShowError("Feature Coming Soon!", "This feature is currently in development and will be available in a future update.");
+            MyPageUI.TransitionToPage<MainMenuViewLobbiesPage>();
         }
 
-        private IEnumerator JoinRandomPrivateGame()
+        public static void JoinRandomPriv()
         {
-            Debug.Log("Joining Random Private Photon Room");
-            //Hosting a game, Allows me to kick myself from the photon room, the game then bugs out and places me in a random what seems to be in progress, full, or private lobbies or all 3
-            MainMenuHandler.Instance.Host(1); //host nonsaveable save to not screw with any other save
-
-            //lets wait for the hosted lobby
-            yield return new WaitForSeconds(4f);
-
-            Debug.Log("Self Kicking / going to private lobby");
-            //enable kicking in the photon room (this is local even if you are master client thus why we host our own lobby)
-            PhotonNetwork.EnableCloseConnection = true;
-
-            //Send the kick notification to myself (with it enabled and being the master as it does check if the request is sent by the master)
-            RaiseEventOptions raiseEventOptions = new RaiseEventOptions()
-            {
-                TargetActors = new int[1] { PhotonNetwork.LocalPlayer.ActorNumber }
-            };
-            PhotonNetwork.NetworkingClient.OpRaiseEvent((byte)203, (object)null, raiseEventOptions, SendOptions.SendReliable);
-
-            //Waiting for the kick to happen and be randomly sent to another lobby, this takes a few seconds
-            yield return new WaitForSeconds(5f);
-
-            Debug.Log("Handle Surface Joining");
-
-            //if (SceneManager.GetActiveScene().name != "SurfaceScene") //if in underworld go under with em, stopping lag. Else saty with em
-            //else
-
-
-            SurfaceNetworkHandler.Instance.photonView.RPC("RPC_LoadScene", RpcTarget.All, "FactoryScene");
+            HelloWorld.Instance.StartCoroutine(HelloWorld.JoinRandomPrivateGame());
         }
+
+        
     }
 }

@@ -34,10 +34,11 @@ namespace TestUnityPlugin
             GameObject go = new GameObject("MainMenuViewLobbiesPage", typeof(RectTransform));
             go.transform.SetParent(FindObjectOfType<UIPageHandler>().transform, false);
             UIPage page = go.AddComponent<MainMenuViewLobbiesPage>();
-
-            TryRegisterPage(page);
+            Debug.Log("ATTEMPTING TO ADD A PAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            MyPageUI.TryRegisterPage(page);
 
             hasAddedPages = true;
+            Debug.Log("ADDED PAGES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         }
 
         public static void TryAttachToPageHandler()
@@ -52,14 +53,28 @@ namespace TestUnityPlugin
 
         public static void TryRegisterPage(UIPage page)
         {
+            Debug.LogWarning("TRYING TO REGISTER PAGE");
             var handler = FindObjectOfType<UIPageHandler>();
-            var pages = handler.GetType().GetMethod("Reflect").Invoke(handler, null).GetType().GetProperty("_pages").GetValue(handler, null) as Dictionary<Type, UIPage>;
+            if (handler == null) return;
+            Debug.LogWarning("Handler passed!");
+
+            // Accessing the private or protected field "_pages"
+            var pages = handler.Reflect().GetValue("_pages") as Dictionary<Type, UIPage>;
+
+            if (pages == null) {
+                Debug.Log("PAGES WAS NULL");
+                return;
+            }
+            Debug.LogWarning("adding pages!!");
+
             pages.Add(page.GetType(), page);
+            Debug.LogWarning("pages added!!!");
+
         }
 
         public static void TransitionToPage<T>() where T : UIPage
         {
-            FindObjectOfType<UIPageHandler>().GetType().GetMethod("TransistionToPage").MakeGenericMethod(typeof(T)).Invoke(null, null);
+            FindObjectOfType<UIPageHandler>().TransistionToPage<T>();
         }
     }
 }

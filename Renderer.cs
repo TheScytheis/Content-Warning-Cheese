@@ -51,5 +51,42 @@ namespace TestUnityPlugin
             GUI.matrix = matrix;
             GUI.color = color2;
         }
+
+        public static void DrawCrosshair(Color color, float size, float width)
+        {
+            Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
+            float halfSize = size / 2;
+
+            // Horizontal line
+            DrawLine(center - new Vector2(halfSize, 0), center + new Vector2(halfSize, 0), color, width);
+            // Vertical line
+            DrawLine(center - new Vector2(0, halfSize), center + new Vector2(0, halfSize), color, width);
+        }
+
+        public static Texture2D circleTex;
+
+        public static void DrawCircle(Vector2 center, float radius, Color color)
+        {
+            if (circleTex == null)
+            {
+                // Create a circular texture if it doesn't exist
+                circleTex = new Texture2D(128, 128);
+                for (int y = 0; y < circleTex.height; y++)
+                {
+                    for (int x = 0; x < circleTex.width; x++)
+                    {
+                        float xDist = (x - circleTex.width / 2) / (float)(circleTex.width / 2);
+                        float yDist = (y - circleTex.height / 2) / (float)(circleTex.height / 2);
+                        float distance = Mathf.Sqrt(xDist * xDist + yDist * yDist);
+                        circleTex.SetPixel(x, y, distance <= 1 ? Color.white : Color.clear);
+                    }
+                }
+                circleTex.Apply();
+            }
+
+            GUI.color = color;
+            GUI.DrawTexture(new Rect(center.x - radius, center.y - radius, radius * 2, radius * 2), circleTex);
+            GUI.color = Color.white; // Reset color to avoid affecting other GUI elements
+        }
     }
 }

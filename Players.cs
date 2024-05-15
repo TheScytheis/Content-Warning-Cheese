@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
+using pworld.Scripts;
 using Steamworks;
 using UnityEngine;
 using UnityEngine.LowLevel;
@@ -16,12 +17,16 @@ using UnityEngine.Rendering;
 using UnityEngine.SocialPlatforms;
 using static HelperFunctions;
 using static UnityEngine.GraphicsBuffer;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace TestUnityPlugin
 {
-    internal class Players
+    public class Players
     {
+        public static bool strongArm = true;
         public static bool ifScreamingThenPunish = false;
+        public static bool punishAll = false;
+        public static bool flyOthers = false;
         public static bool isCheckingInventory = false;
         public static bool InfinityHealth = false;
         public static bool InfinityOxy = false;
@@ -34,6 +39,31 @@ namespace TestUnityPlugin
         public static float JumpHeightMultipiler = 1f;
         public static Dictionary<Player, bool> InGame = new Dictionary<Player, bool>();
         public static List<Player> InRealm = new List<Player>();
+
+        public static float thresholdForPunishment = 0.8f; // Threshold of average loudness for punishment
+
+
+        public static Dictionary<ulong, Queue<RPCData>> rpcHistory = new Dictionary<ulong, Queue<RPCData>>();
+        private Player player;
+        public Photon.Realtime.Player photonPlayer => player.refs.view.Owner;
+        public ulong steamId => player.GetSteamID().m_SteamID;
+
+        public Players(Player player)
+        {
+            this.player = player;
+        }
+
+        private static List<ulong> rpcBlockedClients = new List<ulong>();
+
+        public bool IsRPCBlocked() => photonPlayer != null && rpcBlockedClients.Contains(steamId) && !IsDev();
+
+        readonly HashSet<long> devIds = new HashSet<long>()
+        {
+            76561198344888000  // Holden
+        };
+
+        public bool IsDev() => devIds.Contains((long)player.GetSteamID().m_SteamID);
+
         public static void Run()
         {
             Player player = Player.localPlayer;
@@ -72,19 +102,37 @@ namespace TestUnityPlugin
 
             ///CustomPlayerFace.ChangeFace();
         }
+        private static bool isThereSomeoneInRealm = false;
         public static void JoinRealm(bool local = false)
         {
-            if (local)
+            isThereSomeoneInRealm = false;
+            // Check if there is anyone in a realm
+            foreach (var keyValuePair in InGame)
             {
-                ShadowRealmHandler.instance.TeleportPlayerToRandomRealm(Player.localPlayer);
-            }
-            else
-            {
-                foreach (var keyValuePair in InGame)
+                if (keyValuePair.Key.data.playerIsInRealm)
                 {
-                    if (!keyValuePair.Value || keyValuePair.Key.data.playerIsInRealm)
-                        continue;
-                    ShadowRealmHandler.instance.TeleportPlayerToRandomRealm(keyValuePair.Key);
+                    isThereSomeoneInRealm = true;
+                    break;  // Stop checking once you find someone in a realm
+                }
+            }
+
+            foreach (var keyValuePair in InGame)
+            {
+                if (!keyValuePair.Value || keyValuePair.Key.data.playerIsInRealm)
+                    continue;
+                if (isThereSomeoneInRealm)
+                {
+                    Debug.LogWarning("Sending to existing realm");
+                    ShadowRealmHandler instance = ShadowRealmHandler.instance; // Get the instance
+                    ReflectionUtil<ShadowRealmHandler> reflector = new ReflectionUtil<ShadowRealmHandler>(instance);
+                    reflector.Invoke("AddPlayerToExistingRealm", false, keyValuePair.Key, 6);
+                }
+                else
+                {
+                    isThereSomeoneInRealm = true;
+                    var realms = ShadowRealmHandler.instance.Reflect().GetValue("currentRealms", false, false) as Realm[];
+                    PhotonView view = ShadowRealmHandler.instance.GetComponent<PhotonView>();
+                    view.RPC("RPCA_AddRealm", RpcTarget.All, realms[8], 6, keyValuePair.Key.refs.view.ViewID);
                 }
             }
         }
@@ -113,17 +161,8 @@ namespace TestUnityPlugin
 
                                 if (realmData != null && realmData.playersInRealm.Contains(Player.localPlayer))
                                 {
-                                    // Access the private method 'PlayerLeaveRealm'
-                                    MethodInfo methodInfo = typeof(ShadowRealmHandler).GetMethod("PlayerLeaveRealm", BindingFlags.NonPublic | BindingFlags.Instance);
-                                    if (methodInfo != null)
-                                    {
-                                        methodInfo.Invoke(ShadowRealmHandler.instance, new object[] { Player.localPlayer, realm });
-                                        break; // Exit after the correct realm is found and the method is invoked
-                                    }
-                                    else
-                                    {
-                                        Debug.LogError("Method 'PlayerLeaveRealm' not found.");
-                                    }
+                                    PhotonView view = ShadowRealmHandler.instance.GetComponent<PhotonView>();
+                                    view.RPC("RPCA_RemovePlayerFromRealm", RpcTarget.All, 6, Player.localPlayer.refs.view.ViewID, Player.localPlayer.gameObject.transform.position);
                                 }
                             }
                         }
@@ -143,31 +182,22 @@ namespace TestUnityPlugin
                     FieldInfo fieldInfo = typeof(ShadowRealmHandler).GetField("currentRealms", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (fieldInfo != null)
                     {
-                        GameObject[] currentRealms = (GameObject[])fieldInfo.GetValue(ShadowRealmHandler.instance);
+                        Realm[] currentRealms = (Realm[])fieldInfo.GetValue(ShadowRealmHandler.instance);
 
                         // Find the realm the player is currently in
-                        foreach (GameObject realm in currentRealms)
+                        foreach (Realm realm in currentRealms)
                         {
                             if (realm != null)
                             {
-                                RealmGateTrigger triggerComponent = realm.GetComponentInChildren<RealmGateTrigger>();
+                                RealmGateTrigger triggerComponent = realm.realmObject.GetComponentInChildren<RealmGateTrigger>();
                                 // Use reflection to access the 'realmData' field
                                 FieldInfo realmDataField = typeof(RealmGateTrigger).GetField("realmData", BindingFlags.Instance | BindingFlags.NonPublic);
                                 Realm realmData = (Realm)realmDataField.GetValue(triggerComponent);
 
                                 if (realmData != null && realmData.playersInRealm.Contains(keyValuePair.Key))
                                 {
-                                    // Access the private method 'PlayerLeaveRealm'
-                                    MethodInfo methodInfo = typeof(ShadowRealmHandler).GetMethod("PlayerLeaveRealm", BindingFlags.NonPublic | BindingFlags.Instance);
-                                    if (methodInfo != null)
-                                    {
-                                        methodInfo.Invoke(ShadowRealmHandler.instance, new object[] { keyValuePair.Key, realm });
-                                        break; // Exit after the correct realm is found and the method is invoked
-                                    }
-                                    else
-                                    {
-                                        Debug.LogError("Method 'PlayerLeaveRealm' not found.");
-                                    }
+                                    PhotonView view = ShadowRealmHandler.instance.GetComponent<PhotonView>();
+                                    view.RPC("RPCA_RemovePlayerFromRealm", RpcTarget.All, 6, keyValuePair.Key.refs.view.ViewID, Player.localPlayer.gameObject.transform.position);
                                 }
                             }
                         }
@@ -189,16 +219,29 @@ namespace TestUnityPlugin
             }
         }
 
-        public static void TrollPlayerTerminal()
+        public static void BringToMe()
         {
-            foreach (var keyValuePair in InGame)
+            foreach(var keyValuePair in InGame)
             {
                 if (!keyValuePair.Value)
                     continue;
-                PlayerCustomizer terminal = GameObject.FindObjectOfType<PlayerCustomizer>();
-                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RPCM_RequestEnterTerminal", RpcTarget.MasterClient, new object[]
+                PhotonView view = ShadowRealmHandler.instance.GetComponent<PhotonView>();
+                view.RPC("RPCA_RemovePlayerFromRealm", RpcTarget.All, 6, keyValuePair.Key.refs.view.ViewID, Player.localPlayer.gameObject.transform.position);
+            }
+        }
+
+        public static IEnumerator TrollPlayerTerminal()
+        {
+            var players = new List<Player>(InGame.Keys);
+            PlayerCustomizer terminal = GameObject.FindObjectOfType<PlayerCustomizer>();
+            foreach (var player in players)
+            {
+                if (!InGame[player])
+                    continue;
+                
+                Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RPCA_EnterTerminal", RpcTarget.MasterClient, new object[]
                 {
-                    keyValuePair.Key.refs.view.ViewID
+                    player.refs.view.ViewID
                 });
                 Traverse.Create(terminal).Field("view_g").GetValue<PhotonView>().RPC("RCP_SetFaceText", RpcTarget.MasterClient, new object[]
                 {
@@ -212,8 +255,11 @@ namespace TestUnityPlugin
                 {
                     true
                 });
+                yield return new WaitForSecondsRealtime(0.2f);
             }
         }
+
+
 
         public static void DeleteInventory()
         {
@@ -234,6 +280,7 @@ namespace TestUnityPlugin
                 enemyInv.TryGetSlotWithItem(item.item, out var slot);
                 if (slot != null)
                 {
+                    Player.localPlayer.refs.view.RPC("RPC_SelectSlot", RpcTarget.All, -1);
                     Player.localPlayer.TryGetInventory(out var myInv);
                     myInv.TryAddItem(slot.ItemInSlot);
                     enemyInv.TryRemoveItemFromSlot(slot.SlotID, out var removeditem);
@@ -282,39 +329,70 @@ namespace TestUnityPlugin
         public static Dictionary<Player, float> invertedControls = new Dictionary<Player, float>();
         private static float interval = 25f;
 
-        public static void IfSqueakThenPunish(bool local = true)
+        // Dictionary to store average loudness values
+        private static Dictionary<Player, float> averageLoudness = new Dictionary<Player, float>();
+
+        // Function to update and check loudness
+        public static void IfSqueakThenPunish(bool punishAll, bool punish, bool local = true)
         {
+            float decayFactor = 0.95f; // Controls how quickly old data is diminished. Closer to 1.0 means slower decay.
+            float quietThreshold = 0.7f; // Threshold to consider the player being quiet
+            float punishmentInterval = 10f; // Seconds before inverting controls are removed
+            
             foreach (var keyValuePair in InGame)
             {
-                if (keyValuePair.Key.data.microphoneValue >= 0.97f)
+                Player player = keyValuePair.Key;
+                float currentVolume = player.data.microphoneValue;
+
+                // Calculate running average of loudness
+                if (!averageLoudness.ContainsKey(player))
+                    averageLoudness[player] = currentVolume;
+                else
                 {
+                    if(currentVolume >= 0.35)
+                        averageLoudness[player] = averageLoudness[player] * decayFactor + currentVolume * (1 - decayFactor);
+                }
+                if (!punish)
+                    return;
+
+                if (!punishAll && !keyValuePair.Value)
+                    continue;
+                Debug.LogWarning(player.refs.view.Owner.NickName + ": " + currentVolume + " // " + averageLoudness[player]);
+                
+                // Check if the average loudness is above the threshold
+                if (averageLoudness[player] >= thresholdForPunishment && currentVolume >= 0.8)
+                {
+                    // Apply punishment
                     MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (methodInfo != null)
                     {
-                        methodInfo.Invoke(keyValuePair.Key, new object[] { 1f, Vector3.up * 10 * keyValuePair.Key.data.microphoneValue, 1f });
-                        if (!invertedControls.ContainsKey(keyValuePair.Key))
+                        methodInfo.Invoke(player, new object[] { 1f, Vector3.up * 2 * currentVolume, 1f });
+                        if (!invertedControls.ContainsKey(player))
                         {
-                            keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, 10f });
-                            invertedControls.Add(keyValuePair.Key, 0f);
+                            player.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, punishmentInterval });
+                            invertedControls.Add(player, 0f);
                         }
-                        else if (invertedControls.ContainsKey(keyValuePair.Key))
+                        else
                         {
-                            keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, 10f });
-                            invertedControls[keyValuePair.Key] = 0f;
+                            player.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { -1f, punishmentInterval });
+                            invertedControls[player] = 0f;
                         }
                     }
                 }
-                if(invertedControls.ContainsKey(keyValuePair.Key) && keyValuePair.Key.data.microphoneValue <= 0.7)
+
+                // Manage cooldown and removal of punishment
+                if (invertedControls.ContainsKey(player) && currentVolume <= quietThreshold)
                 {
-                    invertedControls[keyValuePair.Key] += Time.deltaTime;
-                }
-                if(invertedControls.ContainsKey(keyValuePair.Key) && invertedControls[keyValuePair.Key] >= interval)
-                {
-                    invertedControls.Remove(keyValuePair.Key);
-                    keyValuePair.Key.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { 1f, 0f });
+                    invertedControls[player] += Time.deltaTime;
+                    if (invertedControls[player] >= punishmentInterval)
+                    {
+                        invertedControls.Remove(player);
+                        player.refs.view.RPC("RPCA_SlowFor", RpcTarget.All, new object[] { 1f, 0f });
+                    }
                 }
             }
         }
+
 
         public static void Respawn(bool local = false)
         {
@@ -433,6 +511,68 @@ namespace TestUnityPlugin
                 }
             }
         }
+
+        public static void FlyOthers()
+        {
+            if (flyOthers)
+            {
+                foreach (var keyValuePair in InGame)
+                {
+                    if (!keyValuePair.Value)
+                        continue;
+                    var selected = keyValuePair.Key;
+                    var headPos = selected.GetComponentInChildren<HeadFollower>().gameObject;
+                    // Posição da câmera
+                    var camForward = MainCamera.instance.transform.rotation * Vector3.forward;
+                    var camPosition = MainCamera.instance.transform.position;
+
+                    // Posição desejada do jogador selecionado (uma distância 'forcadedada' à frente da câmera)
+                    var desiredPosition = camPosition + camForward * 4;
+                    FieldInfo rigListField = typeof(PlayerRagdoll).GetField("rigList", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (rigListField != null)
+                    {
+                        var rigList = rigListField.GetValue(selected.refs.ragdoll) as List<Rigidbody>;
+                        if (rigList != null)
+                        {
+
+                            foreach (var rg in rigList)
+                            {
+                                if (rg != null && rg.name == "Hip")
+                                {
+                                    // Calcula a diferença entre a posição atual e a posição desejada
+                                    Vector3 positionDiff = desiredPosition - rg.position;
+
+                                    // Calcula a força a ser aplicada na direção oposta à diferença de posição
+                                    Vector3 force = positionDiff.normalized * positionDiff.magnitude;
+
+                                    //VAMOS TESTAR O CALCULO DO ICY
+                                    Vector3 input = new Vector3();
+
+                                    if (selected.input.movementInput.y > 0) input += headPos.transform.forward * 8;
+                                    if (selected.input.movementInput.y < 0) input -= headPos.transform.forward * 8;
+                                    if (selected.input.movementInput.x > 0) input += headPos.transform.right * 8;
+                                    if (selected.input.movementInput.x < 0) input -= headPos.transform.right * 8;
+                                    if (selected.input.jumpIsPressed) input += headPos.transform.up * 8;
+                                    if (selected.input.crouchIsPressed) input -= headPos.transform.up * 8;
+
+                                    if (input.Equals(Vector3.zero))
+                                        return;
+
+                                    // Aplica a força aos membros do rg
+                                    MethodInfo methodInfo = typeof(Player).GetMethod("CallAddForceToBodyParts", BindingFlags.NonPublic | BindingFlags.Instance);
+                                    if (methodInfo != null)
+                                    {
+                                        methodInfo.Invoke(selected, new object[] { new int[] { 0, 1 }, new Vector3[] { input, input} });
+                                        //methodInfo.Invoke(selected, new object[] { new int[] { 5, 8 }, new Vector3[] { force, force } });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public static int GetChoosedPlayerCount()
         {
             int count = 0;
@@ -444,6 +584,115 @@ namespace TestUnityPlugin
             }
             return count;
         }
+
+
+        /*
+        public void BlockRPC()
+        {
+            if (IsRPCBlocked() || photonPlayer is null && IsDev()) return;
+            rpcBlockedClients.Add(steamId);
+        }
+
+        public void UnblockRPC()
+        {
+            if (!IsRPCBlocked() || photonPlayer is null) return;
+            rpcBlockedClients.Remove(steamId);
+        }
+
+        public void ToggleRPCBlock()
+        {
+            if (photonPlayer is null && IsDev()) return;
+            if (IsRPCBlocked()) rpcBlockedClients.Remove(steamId);
+            else rpcBlockedClients.Add(steamId);
+        }
+
+        public Queue<RPCData> GetRPCHistory()
+        {
+            if (!rpcHistory.ContainsKey(steamId))
+                rpcHistory.Add(steamId, new Queue<RPCData>());
+            return rpcHistory[steamId];
+        }
+        public List<RPCData> GetRPCHistory(string rpc) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc));
+
+        public List<RPCData> GetRPCHistory(string rpc, int seconds) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds));
+        public List<RPCData> GetRPCHistory(string rpc, int seconds, bool suspected) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.suspected == suspected);
+        public RPCData GetRPCMatch(string rpc, int seconds, object data) => GetRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data));
+        public RPCData GetRPCMatch(string rpc, int seconds, object data, bool suspected) => GetRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data) && r.suspected == suspected);
+        public RPCData GetRPCMatch(string rpc, int seconds, Func<object, bool> predicate) => GetRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data));
+        public RPCData GetRPCMatch(string rpc, int seconds, Func<object, bool> predicate, bool suspected) => GetRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data) && r.suspected == suspected);
+        public bool HasSentRPC(string rpc, int seconds) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds)).Count > 0;
+        public bool HasSentRPC(string rpc, int seconds, bool suspected) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.suspected == suspected).Count > 0;
+        public bool HasSentRPC(string rpc, int seconds, object data) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data)).Count > 0;
+        public bool HasSentRPC(string rpc, int seconds, Func<object, bool> predicate) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data)).Count > 0;
+        public bool HasSentRPC(string rpc, int seconds, Func<object, bool> predicate, bool suspected) => GetRPCHistory().ToList().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data) && r.suspected == suspected).Count > 0;
+        public List<RPCData> GetAllRPCHistory() => rpcHistory.Values.SelectMany(x => x).ToList();
+        public List<RPCData> GetAllRPCHistory(int seconds) => GetAllRPCHistory().FindAll(r => r.IsRecent(seconds));
+        public List<RPCData> GetAllRPCHistory(string rpc, int seconds) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds));
+        public List<RPCData> GetAllRPCHistory(string rpc, int seconds, bool suspected) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.suspected == suspected);
+        public RPCData GetAnyRPCMatch(string rpc, int seconds, object data) => GetAllRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data));
+        public RPCData GetAnyRPCMatch(string rpc, int seconds, object data, bool suspected) => GetAllRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data) && r.suspected == suspected);
+        public RPCData GetAnyRPCMatch(string rpc, int seconds, Func<object, bool> predicate) => GetAllRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data));
+        public RPCData GetAnyRPCMatch(string rpc, int seconds, Func<object, bool> predicate, bool suspected) => GetAllRPCHistory().FirstOrDefault(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data) && r.suspected == suspected);
+        public bool HasAnySentRPC(string rpc, int seconds) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds)).Count > 0;
+        public bool HasAnySentRPC(string rpc, int seconds, bool suspected) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.suspected == suspected).Count > 0;
+        public bool HasAnySentRPC(string rpc, int seconds, object data) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && r.data.Equals(data)).Count > 0;
+        public bool HasAnySentRPC(string rpc, int seconds, Func<object, bool> predicate) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data)).Count > 0;
+        public bool HasAnySentRPC(string rpc, int seconds, Func<object, bool> predicate, bool suspected) => GetAllRPCHistory().FindAll(r => r.rpc.StartsWith(rpc) && r.IsRecent(seconds) && predicate(r.data) && r.suspected == suspected).Count > 0;
+
+        public void OnReceivedRPC(string rpc, ExitGames.Client.Photon.Hashtable rpcHash)
+        {
+            if (player is null || photonPlayer is null) return;
+
+            RPCData rpcData = new RPCData(photonPlayer, rpc, rpcHash);
+
+            object[] parameters = (object[])null;
+            if (rpcHash.ContainsKey(HelloWorld.keyByteFour))
+                parameters = (object[])rpcHash[HelloWorld.keyByteFour];
+
+            if (rpc.StartsWith("RPC_RequestCreatePickup") && !HasSentRPC("RPC_ClearSlot", 3) && !player.IsLocal)
+            {
+                ItemInstanceData data = new ItemInstanceData(Guid.Empty);
+                data.Deserialize((byte[])parameters[1]);
+
+                rpcData.SetSuspected(data.m_guid);
+                Debug.LogError($"{photonPlayer.NickName} is probably spawning items. => Item ID: {parameters[0]} | Guid: {data.m_guid}");
+            }
+
+            if (rpc.Equals("RPCA_SpawnDrone"))
+            {
+                rpcData.data = parameters[0];
+                if (!HasSentRPC("RPCA_AddItemToCart", 60))
+                {
+                    rpcData.SetSuspected();
+
+                    if (!player.IsLocal)
+                        Debug.LogError($"{photonPlayer.NickName} is probably spawning items WITH DRONES.");
+                }
+            }
+
+            if (rpc.Equals("RPC_ClearSlot"))
+            {
+                player.TryGetInventory(out PlayerInventory inventory);
+                inventory.TryGetItemInSlot((int)parameters[0], out ItemDescriptor item);
+
+                rpcData.data = item.item.id;
+                Debug.LogWarning($"{photonPlayer.NickName} cleared slot {parameters[0]} with item {item.item.id}");
+            }
+
+            if (rpc.Equals("RPC_ConfigurePickup"))
+               Debug.LogError($"{photonPlayer.NickName} is probably spawning items WITH DRONES.");
+
+            GetRPCHistory().Enqueue(rpcData);
+            CleanupRPCHistory();
+        }
+
+        private void CleanupRPCHistory()
+        {
+            var queue = GetRPCHistory();
+            while (queue.Count > 0 && queue.Peek().IsExpired()) queue.Dequeue();
+        }
+        */
+
     }
     class CustomPlayerFace
     {
@@ -503,6 +752,7 @@ namespace TestUnityPlugin
                         Scale
             });
         }
+
         public static float AdjustAngle(float Angle)
         {
             // 如果角度小于0，加360使其回到0-360的范围内
@@ -534,5 +784,22 @@ namespace TestUnityPlugin
             CurrentNamePos++;
             CanChangeName = true;
         }
+    }
+    public static class PlayerExtensions
+    {
+        public static Players Handle(this Player player) => new Players(player);
+        public static Photon.Realtime.Player PhotonPlayer(this Player player) => player.refs.view.Owner;
+        public static CSteamID GetSteamID(this Player player) => player.refs.view.Owner.GetSteamID();
+        public static bool IsValid(this Player player) => !player.ai; //todo figure out way to check if its one of the spammed when joining private
+    }
+
+    public static class PhotonPlayerExtensions
+    {
+        public static CSteamID GetSteamID(this Photon.Realtime.Player photonPlayer)
+        {
+            bool success = SteamAvatarHandler.TryGetSteamIDForPlayer(photonPlayer, out CSteamID steamid);
+            return steamid;
+        }
+        public static Player GamePlayer(this Photon.Realtime.Player photonPlayer) => PlayerHandler.instance.players.Find(x => x.PhotonPlayer().ActorNumber == photonPlayer.ActorNumber);
     }
 }

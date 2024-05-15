@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Steamworks;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TestUnityPlugin;
@@ -39,11 +40,16 @@ namespace TestUnityPlugin
                 // 绘制
                 if (spos.z > 0f)
                 {
+                    var name = SteamFriends.GetFriendPersonaName(player.GetSteamID());
+                    if (player.refs.view.Owner.NickName != name)
+                    {
+                        name = name + "( " + player.refs.view.Owner.NickName + " )";
+                    }
                     if (EnableDrawLine) Renderer.DrawLine(new Vector2((float)Screen.width / 2, Screen.height), new Vector2(spos.x, Screen.height - spos.y), Color.white, 2f);
                     if (EnableDrawString)
-                        Renderer.DrawColorString(new Vector2(spos.x, Screen.height - spos.y), player.refs.view.Owner.NickName, Color.white, fontsize);
+                        Renderer.DrawColorString(new Vector2(spos.x, Screen.height - spos.y), name, Color.white, fontsize);
                     if (EnableDistance)
-                        Renderer.DrawColorString(new Vector2(spos.x, Screen.height - spos.y + (EnableDrawString ? Renderer.CalcStringSize(player.refs.view.Owner.NickName, fontsize).y : 0f)), Mathf.RoundToInt(distance).ToString() + "m", Color.yellow, fontsize);
+                        Renderer.DrawColorString(new Vector2(spos.x, Screen.height - spos.y + (EnableDrawString ? Renderer.CalcStringSize(name, fontsize).y : 0f)), Mathf.RoundToInt(distance).ToString() + "m", Color.yellow, fontsize);
                 }
             }
         }

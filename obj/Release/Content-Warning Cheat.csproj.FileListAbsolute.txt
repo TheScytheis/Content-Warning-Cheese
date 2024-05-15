@@ -10,3 +10,5 @@ C:\Users\drgui\OneDrive\Documentos\GitHub\SteamBase\steamapps\common\Content War
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\Content-.2EC26C0F.Up2Date
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\TestUnityPlugin.dll
 C:\Users\drgui\OneDrive\Documentos\GitHub\Content-Warning\Content-Warning-Stuff\obj\Release\TestUnityPlugin.pdb
+C:\Users\drgui\OneDrive\Área de Trabalho\dn\build\TestUnityPlugin.dll
+C:\Users\drgui\OneDrive\Área de Trabalho\dn\build\TestUnityPlugin.pdb

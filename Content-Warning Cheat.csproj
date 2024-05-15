@@ -57,6 +57,9 @@
     <Reference Include="com.rlabrecque.steamworks.net">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Content Warning\Content Warning_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
     </Reference>
+    <Reference Include="CommanderCat101.ContentSettings">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Content Warning\BepInEx\plugins\CommanderCat101.ContentSettings.dll</HintPath>
+    </Reference>
     <Reference Include="Discord">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Content Warning\Content Warning_Data\Managed\Discord.dll</HintPath>
     </Reference>
@@ -457,17 +460,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnActualWheelOfColors.cs" />
+    <Compile Include="BetterSpectate\Patches.cs" />
+    <Compile Include="BetterSpectate\Utils.cs" />
     <Compile Include="Conversor.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="ESP.cs" />
     <Compile Include="IVariableCheat.cs" />
-    <Compile Include="LobbiesWindow.cs" />
     <Compile Include="LobbyManager.cs" />
+    <Compile Include="LobbyMenu.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="MainMenuViewLobbiesPage.cs" />
     <Compile Include="MyPageUI.cs" />
     <Compile Include="NameSpoof.cs" />
     <Compile Include="ReflectionUtil.cs" />
+    <Compile Include="RPCData.cs" />
+    <Compile Include="ServerLobby.cs" />
+    <Compile Include="Throwable\Throwables.cs" />
     <Compile Include="UsefulFuncs.cs" />
     <Compile Include="Items.cs" />
     <Compile Include="Misc.cs" />
